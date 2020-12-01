@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -15,12 +16,18 @@ public class PlayerController : MonoBehaviour
 
     //jump flag - if a jump started
     bool pressedJump = false;
+
+    //acccess the HUD
+    public HudManager hud;
     
     // Start is called before the first frame update
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         coll = GetComponent<Collider>();
+        
+        //refresh score on game start
+        hud.Refresh();
     }
 
     // Update is called once per frame
@@ -69,7 +76,7 @@ public class PlayerController : MonoBehaviour
         //check if grounded
         bool isGrounded = CheckGrounded();
 
-        if (jAxis > 0f)
+        if (jAxis>0f)
         {
             if (!pressedJump && isGrounded)
             {
@@ -110,4 +117,37 @@ public class PlayerController : MonoBehaviour
         //if a corner is grounded, the object is grounded
         return (grounded1 || grounded2 || grounded3 || grounded4);
     }
+
+    void OnTriggerEnter(Collider collider)
+    {
+        //check if player ran into a coin
+        if (collider.gameObject.tag=="Coin")
+        {
+            print("Grabbing coin");
+
+            //increase the game score
+            GameManager.instance.IncreaseScore(1);
+
+            //increase the score text
+            hud.Refresh();
+
+            //destroy the coin game object in the scene
+            Destroy(collider.gameObject);
+        }
+
+        //check if player ran into an enemy
+        else if (collider.gameObject.tag=="Enemy")
+        {
+            print("Game Over");
+            SceneManager.LoadScene("Game Over");
+        }
+
+        //check if player reached the level goal
+        else if (collider.gameObject.tag=="Goal")
+        {
+            print("Next Level!");
+            GameManager.instance.IncreaseLevel();
+        }
+    }
+
 }
